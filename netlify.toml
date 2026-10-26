@@ -1,0 +1,9 @@
+# Nitro auto-detects Netlify at build time: static assets go to dist/,
+# the SSR server is generated into .netlify/functions-internal/ (no manual functions dir needed).
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # README requires Node 22+
+  NODE_VERSION = "22"
