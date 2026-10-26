@@ -1,6 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { easeInOut, easeOut, motion, useScroll, useTransform, type MotionValue } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import hillsFront from "@/assets/hills-hd.webp";
 import moss from "@/assets/moss.webp";
 import carnation from "@/assets/carnation.webp";
@@ -65,12 +65,19 @@ function Index() {
   // funnel: rises, parks (top at 16vh), lifts so the stem tip sits near the top, exits
   const funnelTop = useTransform(p, [0.42, 0.52, 0.7, 0.76, 0.86, 0.9], [150, 16, 16, -62, -62, -150]);
   const funnelY = useTransform(funnelTop, (v) => `${v}vh`);
-  // everything above the rim stays visible; below the rim only the bowl interior shows
+  const vp = useViewport();
+  const vpRef = useRef(vp);
+  vpRef.current = vp;
+  // Everything above the rim stays visible; below the rim only the bowl interior shows. Plain px and always a
+  // polygon: iOS WebKit dropped the whole layer for a "none" → polygon switch built from calc(vw + vh).
   const insideClip = useTransform([p, funnelTop] as never, (v: number[]) => {
+    const { W, H } = vpRef.current;
     const pv = v[0] ?? 0, t = v[1] ?? 0;
-    if (pv < 0.5) return "none";
-    const rim = t + 3.6, tip = t + 40.8;
-    return `polygon(0 0, 100% 0, 100% ${rim}vh, calc(50vw + 28.3vh) ${rim}vh, calc(50vw + 3.2vh) ${tip}vh, calc(50vw - 3.2vh) ${tip}vh, calc(50vw - 28.3vh) ${rim}vh, 0 ${rim}vh)`;
+    if (pv < 0.5) return `polygon(${-W}px ${-H}px, ${2 * W}px ${-H}px, ${2 * W}px ${3 * H}px, ${-W}px ${3 * H}px)`;
+    const vh = H / 100, cx = W / 2;
+    const rim = (t + 3.6) * vh, tip = (t + 40.8) * vh, top = -H;
+    const wide = 28.3 * vh, narrow = 3.2 * vh;
+    return `polygon(${-W}px ${top}px, ${2 * W}px ${top}px, ${2 * W}px ${rim}px, ${cx + wide}px ${rim}px, ${cx + narrow}px ${tip}px, ${cx - narrow}px ${tip}px, ${cx - wide}px ${rim}px, ${-W}px ${rim}px)`;
   });
   const bigTextOpacity = useTransform(p, [0.48, 0.56, 0.7, 0.76], [0, 1, 1, 0]);
   const bigTextScale = useTransform(p, [0.48, 0.6], [0.92, 1]);
@@ -80,7 +87,7 @@ function Index() {
   // bottle + cap + finale
   // bottle group (body + cap): same bottle the drop falls into, then glides down onto the centre pedestal
   // lifts clear while the pedestals rise in (bottom edge above the empty centre stone), then settles onto it
-  const L = useFinaleLayout();
+  const L = useMemo(() => finaleLayout(vp.W, vp.H), [vp.W, vp.H]);
   // Finale: the bottle shrinks and sinks onto its stone. Its *top* (cap) is what's animated, and only ever moves
   // down; the group's y is derived from it, since the group scales from its bottom edge. Animating y directly made
   // the bottom edge race upward while shrinking, so the bottle looked like it jumped up.
@@ -109,7 +116,8 @@ function Index() {
   const headingY = useTransform(p, [0.988, 0.998], ["3vh", "0vh"]);
   const contactScale = useTransform(contact, [0, 1], [1.6, 1]);
   const reflOpacity = useTransform(contact, [0, 1], [0, 0.12]);
-  const fs = useFunnelScale();
+  // Funnel is ~0.74 × its 80vh height wide; shrink it (and what falls into it) on narrow phones.
+  const fs = Math.min(1, vp.W / (vp.H * 0.62));
 
   return (
     <main className="bg-background text-foreground">
@@ -164,7 +172,7 @@ function Index() {
                     src={side < 0 ? layton : imagination}
                     alt={`AZUR ${side < 0 ? "Layton" : "Imagination"}`}
                     className="absolute max-w-none"
-                    style={{ height: L.sideBottleH, left: b.x, top: L.sideSeat - L.sideBottleH * 0.985, transform: "translateX(-50%)", filter: "drop-shadow(0 0.6vh 0.8vh oklch(0.15 0.03 150 / .35))" }}
+                    style={{ height: L.sideBottleH, left: b.x, top: L.sideSeat - L.sideBottleH * 0.985, transform: "translateX(-50%)" }}
                   />
                 </motion.div>
               );
@@ -182,7 +190,9 @@ function Index() {
               <motion.div className="absolute left-1/2 -translate-x-1/2 rounded-[50%]" style={{ bottom: "-4.5%", width: "130%", height: "10%", opacity: contact, scaleX: contactScale, background: "radial-gradient(ellipse at center, oklch(0.08 0.02 150 / .7), transparent 70%)", filter: "blur(6px)" }} />
               <motion.div className="absolute left-1/2 -translate-x-1/2 rounded-[50%]" style={{ bottom: "-1.2%", width: "92%", height: "3%", opacity: contact, background: "oklch(0.06 0.02 150 / .75)", filter: "blur(3px)" }} />
               <motion.img src={bottle} alt="" aria-hidden className="absolute left-0 top-full h-full w-full" style={{ opacity: reflOpacity, scaleY: -1, transformOrigin: "50% 0%", maskImage: "linear-gradient(to bottom, black, transparent 22%)", WebkitMaskImage: "linear-gradient(to bottom, black, transparent 22%)" }} />
-              <img src={bottle} alt="AZUR bočica" className="relative h-full w-full drop-shadow-2xl" />
+              {/* soft static shadow behind the glass instead of a drop-shadow filter (re-rasterised on every scale step) */}
+              <div className="absolute inset-x-[8%] bottom-[2%] top-[18%] rounded-[12%] bg-[oklch(0.2_0.04_150/0.28)] blur-2xl" />
+              <img src={bottle} alt="AZUR bočica" className="relative h-full w-full" />
               <motion.div className="absolute overflow-hidden" style={{ left: "19%", top: "33%", width: "60%", aspectRatio: "925 / 1186", borderRadius: "4%", x: labelX, opacity: labelOpacity, rotate: labelRot, scaleX: labelSX, boxShadow: "0 0.4vh 1.2vh oklch(0.2 0.03 80 / .25)" }}>
                 <img src={label} alt="AZUR etiketa" className="h-full w-full" />
                 <motion.div className="absolute inset-y-0 w-1/3 -skew-x-12" style={{ x: labelShine, background: "linear-gradient(90deg, transparent, oklch(1 0 0 / .7), transparent)" }} />
@@ -211,7 +221,7 @@ function Index() {
           </motion.div>
 
           {/* botanicals */}
-          <motion.div className="pointer-events-none absolute inset-0 z-40" style={{ clipPath: insideClip }}>
+          <motion.div className="pointer-events-none absolute inset-0 z-40" style={{ clipPath: insideClip, WebkitClipPath: insideClip }}>
             {ITEMS.map((item, i) => (
               <Botanical key={item.name} p={p} i={i} fs={fs} {...item} />
             ))}
@@ -220,8 +230,8 @@ function Index() {
           {/* funnel front glass: blurs & tints everything inside the bowl */}
           <motion.div className="pointer-events-none absolute left-1/2 top-0 z-50 -translate-x-1/2" style={{ y: funnelY, height: `${FUNNEL_H}vh`, aspectRatio: "901 / 1222" }}>
             <div
-              className="absolute inset-0 bg-primary-foreground/15"
-              style={{ clipPath: BOWL_CLIP, backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)" }}
+              className="absolute inset-0 bg-primary-foreground/25"
+              style={{ clipPath: BOWL_CLIP, WebkitClipPath: BOWL_CLIP }}
             />
             <img src={funnel} alt="" aria-hidden className="relative h-full w-full opacity-35 mix-blend-screen" />
           </motion.div>
@@ -278,18 +288,16 @@ function Botanical({ p, i, fs, name, src, hx, hy, lift }: BotanicalProps) {
   const rotate = useTransform(p, [0, lift, lift + 0.04, 0.3, 0.42, 0.52, 0.6], [tilt, tilt, -tilt * 2.5, 0, 0, i % 2 ? 12 : -12, i % 2 ? 30 : -30]);
   const opacity = useTransform(p, [0, 0.55, 0.62, 0.66, 0.71], [1, 1, 0.55, 0.55, 0]);
   const groundOpacity = useTransform(p, [lift, lift + 0.02], [1, 0]);
-  // fog once they pass the glass rim
-  const filter = useTransform(p, [0.53, 0.6], ["blur(0px) saturate(1) brightness(1)", "blur(5px) saturate(0.6) brightness(1.1)"]);
   const labelOpacity = useTransform(p, [0.28, 0.33, 0.4, 0.44], [0, 1, 1, 0]);
 
   return (
-    <motion.div className="absolute left-0 top-0 z-40 flex flex-col items-center" style={{ x, y, scale, rotate, opacity, filter, translateX: "-50%", translateY: "-50%" }}>
+    <motion.div className="absolute left-0 top-0 z-40 flex flex-col items-center" style={{ x, y, scale, rotate, opacity, translateX: "-50%", translateY: "-50%" }}>
       {/* soft shadow on the moss while planted */}
       <motion.div
         className="absolute left-1/2 -translate-x-1/2 rounded-[50%]"
         style={{ top: "calc(min(22vh, 28vw) * 0.86)", width: "min(18vh, 23vw)", height: "min(4vh, 5vw)", opacity: groundOpacity, background: "radial-gradient(ellipse at center, oklch(0.18 0.04 140 / .6), transparent 70%)", filter: "blur(4px)" }}
       />
-      <img src={src} alt={name} className="object-contain drop-shadow-xl" style={{ height: "min(22vh, 28vw)", width: "min(22vh, 28vw)" }} />
+      <img src={src} alt={name} className="object-contain" style={{ height: "min(22vh, 28vw)", width: "min(22vh, 28vw)" }} />
       <motion.span className="mt-2 whitespace-nowrap font-display text-sm tracking-[0.12em] text-foreground md:text-2xl md:tracking-[0.25em]" style={{ opacity: labelOpacity }}>
         {name.toUpperCase()}
       </motion.span>
@@ -373,15 +381,29 @@ function finaleLayout(W: number, H: number) {
   };
 }
 
-function useFinaleLayout() {
-  const [l, setL] = useState(() => finaleLayout(1440, 900));
+// Viewport size for the scroll scene. Height is the *large* viewport (100lvh, same as CSS vh), and it only updates
+// when the width changes: on iPhone the address bar showing/hiding fires resize with a new innerHeight on every
+// scroll direction change, and re-laying out the whole scene mid-scroll made it stutter.
+function useViewport() {
+  const [vp, setVp] = useState({ W: 1440, H: 900 });
   useEffect(() => {
-    const f = () => setL(finaleLayout(window.innerWidth, window.innerHeight));
-    f();
+    const probe = document.createElement("div");
+    probe.style.cssText = "position:fixed;top:0;left:0;width:0;height:100lvh;visibility:hidden;pointer-events:none";
+    document.body.appendChild(probe);
+    const measure = () => ({ W: window.innerWidth, H: probe.offsetHeight || window.innerHeight });
+    let last = measure();
+    setVp(last);
+    const f = () => {
+      const next = measure();
+      if (next.W !== last.W) setVp((last = next));
+    };
     window.addEventListener("resize", f);
-    return () => window.removeEventListener("resize", f);
+    return () => {
+      window.removeEventListener("resize", f);
+      probe.remove();
+    };
   }, []);
-  return l;
+  return vp;
 }
 
 // Soft contact shadow where a bottle meets the stone: a wide blurred pool plus a tight dark core.
@@ -412,14 +434,3 @@ function Header() {
   );
 }
 
-// Funnel is ~0.74 × its 80vh height wide; shrink it (and what falls into it) on narrow phones.
-function useFunnelScale() {
-  const [s, setS] = useState(1);
-  useEffect(() => {
-    const f = () => setS(Math.min(1, window.innerWidth / (window.innerHeight * 0.62)));
-    f();
-    window.addEventListener("resize", f);
-    return () => window.removeEventListener("resize", f);
-  }, []);
-  return s;
-}
