@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://azurparfemi.com/sitemap.xml
