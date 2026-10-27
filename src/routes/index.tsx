@@ -2,12 +2,12 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { easeInOut, easeOut, motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import hillsFront from "@/assets/hills-hd.webp";
-import moss from "@/assets/moss.webp";
-import carnation from "@/assets/carnation.webp";
-import flax from "@/assets/flax.webp";
-import azalea from "@/assets/azalea.webp";
-import laurel from "@/assets/laurel.webp";
-import crystal from "@/assets/crystal.webp";
+import saffron from "@/assets/saffron.webp";
+import rose from "@/assets/rose.webp";
+import lavender from "@/assets/lavender.webp";
+import vanilla from "@/assets/vanilla.webp";
+import oud from "@/assets/oud.webp";
+import amber from "@/assets/amber.webp";
 import funnel from "@/assets/funnel-real.webp";
 import bottle from "@/assets/azur-bottle-bare.webp";
 import label from "@/assets/azur-label.webp";
@@ -32,15 +32,38 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-// hx/hy: where each botanical sits "planted" on the hill (vw/vh); lift: scroll progress at which it breaks free
-const ITEMS = [
-  { name: "Mahovina", src: moss, hx: 18, hy: 72, lift: 0.025 },
-  { name: "Karanfil", src: carnation, hx: 40, hy: 62, lift: 0.01 },
-  { name: "Lan", src: flax, hx: 82, hy: 66, lift: 0.035 },
-  { name: "Azaleja", src: azalea, hx: 28, hy: 86, lift: 0.045 },
-  { name: "Lovor", src: laurel, hx: 62, hy: 78, lift: 0.02 },
-  { name: "Kristal", src: crystal, hx: 86, hy: 88, lift: 0.04 },
+// Each note is planted on a spot of the hills photo, given as the pixel where its base touches the ground in that
+// image (HILLS_W × HILLS_H): d on wide screens, m on portrait ones, which only see the middle of the picture.
+// lift: scroll progress at which it breaks free; plant: resting angle in degrees (default ±6°, high for a piece
+// lying on its side); base: how far below the picture's centre the visible bottom is, in box heights (default 0.4);
+// bury: half-width / half-height (in box sizes) of the patch of moss drawn back over its foot so it sits in the ground
+const HILLS_W = 1919;
+const HILLS_H = 1087;
+type Note = { name: string; src: string; d: [number, number]; m: [number, number]; lift: number; plant?: number; base?: number; bury?: [number, number] };
+const ITEMS: Note[] = [
+  { name: "Šafran", src: saffron, d: [370, 712], m: [775, 740], lift: 0.025, bury: [0.3, 0.28] },
+  { name: "Ruža", src: rose, d: [775, 603], m: [775, 600], lift: 0.01 },
+  { name: "Lavanda", src: lavender, d: [1549, 646], m: [1100, 525], lift: 0.035 },
+  { name: "Vanilija", src: vanilla, d: [554, 864], m: [850, 760], lift: 0.045 },
+  { name: "Oud", src: oud, d: [1281, 760], m: [1068, 604], lift: 0.02, plant: 92, base: 0.27, bury: [0.5, 0.12] },
+  { name: "Jantar", src: amber, d: [955, 575], m: [955, 575], lift: 0.04, bury: [0.42, 0.2] },
 ];
+
+// The note's spot on screen in px: where its visible bottom touches the hill photo, which is laid out object-cover,
+// top-aligned, 12vh down. Item box = min(22vh, 28vw), drawn at 0.85×.
+function groundPx(it: Note, W: number, H: number) {
+  const k = Math.max(W / HILLS_W, H / HILLS_H);
+  const [ix, iy] = W < H ? it.m : it.d;
+  return { x: (W - HILLS_W * k) / 2 + ix * k, ground: 0.12 * H + iy * k, size: 0.85 * Math.min(0.22 * H, 0.28 * W) };
+}
+
+// Where (vw / vh of the parent centre) a note must sit for its base to touch its spot, with the label under it.
+function plantSpot(it: Note, W: number, H: number) {
+  const { x, ground, size } = groundPx(it, W, H);
+  const labelH = W >= 768 ? 40 : 28;
+  const y = ground - (it.base ?? 0.4) * size + 0.85 * (labelH / 2);
+  return { hx: (x / W) * 100, hy: (y / H) * 100 };
+}
 
 // Funnel geometry (vh): container height 80vh, bowl rim ≈ 5%, cone tip ≈ 51%, stem tip at 100%
 const FUNNEL_H = 80;
@@ -223,7 +246,7 @@ function Index() {
           {/* botanicals */}
           <motion.div className="pointer-events-none absolute inset-0 z-40" style={{ clipPath: insideClip, WebkitClipPath: insideClip }}>
             {ITEMS.map((item, i) => (
-              <Botanical key={item.name} p={p} i={i} fs={fs} {...item} />
+              <Botanical key={item.name} p={p} i={i} fs={fs} name={item.name} src={item.src} lift={item.lift} plant={item.plant} base={item.base} {...plantSpot(item, vp.W, vp.H)} />
             ))}
           </motion.div>
 
@@ -244,6 +267,8 @@ function Index() {
             className="absolute inset-0 z-20 h-full w-full max-w-none object-cover object-top"
             style={{ y: hillsY, top: "12vh" }}
           />
+          {/* moss and grass drawn back over the foot of the notes that sit in it, so they don't hover on the photo */}
+          {ITEMS.map((item) => item.bury && <Grounding key={item.name} p={p} hillsY={hillsY} it={item} W={vp.W} H={vp.H} />)}
         </div>
       </div>
       <Manifest />
@@ -257,9 +282,9 @@ function Index() {
   );
 }
 
-type BotanicalProps = { p: MotionValue<number>; i: number; fs: number; name: string; src: string; hx: number; hy: number; lift: number };
+type BotanicalProps = { p: MotionValue<number>; i: number; fs: number; name: string; src: string; hx: number; hy: number; lift: number; plant?: number | undefined; base?: number | undefined };
 
-function Botanical({ p, i, fs, name, src, hx, hy, lift }: BotanicalProps) {
+function Botanical({ p, i, fs, name, src, hx, hy, lift, plant, base = 0.4 }: BotanicalProps) {
   const col = i % 3;
   const row = Math.floor(i / 3);
   // grid spot on screen (wider columns on phones), converted to the funnel wrapper's local coordinates
@@ -285,23 +310,50 @@ function Botanical({ p, i, fs, name, src, hx, hy, lift }: BotanicalProps) {
   // hill + grid phases undo the wrapper's fs so they keep full size on phones; funnel phases stay local
   const scale = useTransform(p, [0, lift, 0.3 + d, 0.42, 0.52, 0.6], [0.85 / fs, 0.85 / fs, 1 / fs, 1 / fs, 0.62, 0.42]);
   const tilt = i % 2 ? -6 : 6;
-  const rotate = useTransform(p, [0, lift, lift + 0.04, 0.3, 0.42, 0.52, 0.6], [tilt, tilt, -tilt * 2.5, 0, 0, i % 2 ? 12 : -12, i % 2 ? 30 : -30]);
+  const rotate = useTransform(p, [0, lift, lift + 0.04, 0.3, 0.42, 0.52, 0.6], [plant ?? tilt, plant ?? tilt, -tilt * 2.5, 0, 0, i % 2 ? 12 : -12, i % 2 ? 30 : -30]);
   const opacity = useTransform(p, [0, 0.55, 0.62, 0.66, 0.71], [1, 1, 0.55, 0.55, 0]);
   const groundOpacity = useTransform(p, [lift, lift + 0.02], [1, 0]);
   const labelOpacity = useTransform(p, [0.28, 0.33, 0.4, 0.44], [0, 1, 1, 0]);
 
   return (
-    <motion.div className="absolute left-0 top-0 z-40 flex flex-col items-center" style={{ x, y, scale, rotate, opacity, translateX: "-50%", translateY: "-50%" }}>
+    <motion.div className="absolute left-0 top-0 z-40 flex flex-col items-center" style={{ x, y, scale, opacity, translateX: "-50%", translateY: "-50%" }}>
       {/* soft shadow on the moss while planted */}
       <motion.div
         className="absolute left-1/2 -translate-x-1/2 rounded-[50%]"
-        style={{ top: "calc(min(22vh, 28vw) * 0.86)", width: "min(18vh, 23vw)", height: "min(4vh, 5vw)", opacity: groundOpacity, background: "radial-gradient(ellipse at center, oklch(0.18 0.04 140 / .6), transparent 70%)", filter: "blur(4px)" }}
+        style={{ top: `calc(min(22vh, 28vw) * ${base + 0.46})`, width: "min(18vh, 23vw)", height: "min(4vh, 5vw)", opacity: groundOpacity, background: "radial-gradient(ellipse at center, oklch(0.18 0.04 140 / .6), transparent 70%)", filter: "blur(4px)" }}
       />
-      <img src={src} alt={name} className="object-contain" style={{ height: "min(22vh, 28vw)", width: "min(22vh, 28vw)" }} />
-      <motion.span className="mt-2 whitespace-nowrap font-display text-sm tracking-[0.12em] text-foreground md:text-2xl md:tracking-[0.25em]" style={{ opacity: labelOpacity }}>
-        {name.toUpperCase()}
-      </motion.span>
+      {/* the tilt lives on an inner wrapper so the contact shadow stays flat on the ground */}
+      <motion.div className="flex flex-col items-center" style={{ rotate }}>
+        <img src={src} alt={name} className="object-contain" style={{ height: "min(22vh, 28vw)", width: "min(22vh, 28vw)" }} />
+        <motion.span className="mt-2 whitespace-nowrap font-display text-sm tracking-[0.12em] text-foreground md:text-2xl md:tracking-[0.25em]" style={{ opacity: labelOpacity }}>
+          {name.toUpperCase()}
+        </motion.span>
+      </motion.div>
     </motion.div>
+  );
+}
+
+// A copy of the hill photo laid exactly over the real one, masked to a soft, uneven patch around a note's foot and
+// stacked above the notes, so the moss and grass in front of that spot cover it. Gone as soon as the note lifts off.
+function Grounding({ p, hillsY, it, W, H }: { p: MotionValue<number>; hillsY: MotionValue<string>; it: Note; W: number; H: number }) {
+  const opacity = useTransform(p, [it.lift, it.lift + 0.01], [1, 0]);
+  const { x, ground, size } = groundPx(it, W, H);
+  const [bw, bh] = it.bury ?? [0, 0];
+  const rx = bw * size, ry = bh * size;
+  // centred on the ground line (the photo's own coordinates start 12vh down); a few overlapping lobes for a grassy top
+  const cy = ground - 0.12 * H;
+  const lobe = (dx: number, dy: number, sx: number, sy: number) =>
+    `radial-gradient(${rx * sx}px ${ry * sy}px at ${x + dx * rx}px ${cy + dy * ry}px, black 55%, transparent 100%)`;
+  const mask = [lobe(0, 0.15, 1, 1), lobe(-0.45, -0.05, 0.5, 1.05), lobe(0.4, 0, 0.55, 1.1), lobe(0.05, -0.1, 0.35, 1.15)].join(", ");
+  return (
+    <motion.img
+      src={hillsFront}
+      alt=""
+      aria-hidden
+      className="pointer-events-none absolute inset-0 h-full w-full max-w-none object-cover object-top"
+      // above the notes' layer (z-30), below the header
+      style={{ zIndex: 35, y: hillsY, top: "12vh", opacity, maskImage: mask, WebkitMaskImage: mask, maskRepeat: "no-repeat", WebkitMaskRepeat: "no-repeat" }}
+    />
   );
 }
 
