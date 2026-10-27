@@ -21,7 +21,7 @@ export function InquiryForm() {
   return (
     <form onSubmit={(e) => e.preventDefault()} className="space-y-7 text-left text-navy">
       <Step n={1} label="Vaše ime">
-        <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" placeholder="Ime i prezime" className="field" />
+        <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} enterKeyHint="next" placeholder="Ime i prezime" className="field" />
       </Step>
 
       <Step n={2} label="Mirisi" aside={`${picked.length} / ${MAX_PICKED}`} as="div">
