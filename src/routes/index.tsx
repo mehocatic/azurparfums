@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { easeInOut, easeOut, motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
-import hillsFront from "@/assets/hills-hd.webp";
+import hillsFront from "@/assets/hills-moss.webp";
 import saffron from "@/assets/saffron.webp";
 import rose from "@/assets/rose.webp";
 import lavender from "@/assets/lavender.webp";
@@ -37,24 +37,24 @@ export const Route = createFileRoute("/")({
 // lift: scroll progress at which it breaks free; plant: resting angle in degrees (default ±6°, high for a piece
 // lying on its side); base: how far below the picture's centre the visible bottom is, in box heights (default 0.4);
 // bury: half-width / half-height (in box sizes) of the patch of moss drawn back over its foot so it sits in the ground
-const HILLS_W = 1919;
-const HILLS_H = 1087;
+const HILLS_W = 1748;
+const HILLS_H = 899;
 type Note = { name: string; src: string; d: [number, number]; m: [number, number]; lift: number; plant?: number; base?: number; bury?: [number, number] };
 const ITEMS: Note[] = [
-  { name: "Šafran", src: saffron, d: [370, 712], m: [775, 740], lift: 0.025, bury: [0.3, 0.28] },
-  { name: "Ruža", src: rose, d: [775, 603], m: [775, 600], lift: 0.01 },
-  { name: "Lavanda", src: lavender, d: [1549, 646], m: [1100, 525], lift: 0.035 },
-  { name: "Vanilija", src: vanilla, d: [554, 864], m: [850, 760], lift: 0.045 },
-  { name: "Oud", src: oud, d: [1281, 760], m: [1068, 604], lift: 0.02, plant: 92, base: 0.27, bury: [0.5, 0.12] },
-  { name: "Jantar", src: amber, d: [955, 575], m: [955, 575], lift: 0.04, bury: [0.42, 0.2] },
+  { name: "Šafran", src: saffron, d: [337, 757], m: [707, 783], lift: 0.025, bury: [0.3, 0.28] },
+  { name: "Ruža", src: rose, d: [707, 658], m: [707, 655], lift: 0.01 },
+  { name: "Lavanda", src: lavender, d: [1413, 697], m: [1003, 587], lift: 0.035 },
+  { name: "Vanilija", src: vanilla, d: [505, 896], m: [775, 801], lift: 0.045 },
+  { name: "Oud", src: oud, d: [1168, 801], m: [968, 640], lift: 0.02, plant: 92, base: 0.27, bury: [0.5, 0.12] },
+  { name: "Jantar", src: amber, d: [871, 632], m: [871, 606], lift: 0.04, bury: [0.42, 0.2] },
 ];
 
-// The note's spot on screen in px: where its visible bottom touches the hill photo, which is laid out object-cover,
-// top-aligned, 12vh down. Item box = min(22vh, 28vw), drawn at 0.85×.
+// The note's spot on screen in px: where its visible bottom touches the hill photo, which fills the screen
+// object-cover, top-aligned (its sky is cut out). Item box = min(22vh, 28vw), drawn at 0.85×.
 function groundPx(it: Note, W: number, H: number) {
   const k = Math.max(W / HILLS_W, H / HILLS_H);
   const [ix, iy] = W < H ? it.m : it.d;
-  return { x: (W - HILLS_W * k) / 2 + ix * k, ground: 0.12 * H + iy * k, size: 0.85 * Math.min(0.22 * H, 0.28 * W) };
+  return { x: (W - HILLS_W * k) / 2 + ix * k, ground: iy * k, size: 0.85 * Math.min(0.22 * H, 0.28 * W) };
 }
 
 // Where (vw / vh of the parent centre) a note must sit for its base to touch its spot, with the label under it.
@@ -265,7 +265,7 @@ function Index() {
             src={hillsFront}
             alt="Mahovinasta brda s divljim cvijećem"
             className="absolute inset-0 z-20 h-full w-full max-w-none object-cover object-top"
-            style={{ y: hillsY, top: "12vh" }}
+            style={{ y: hillsY }}
           />
           {/* moss and grass drawn back over the foot of the notes that sit in it, so they don't hover on the photo */}
           {ITEMS.map((item) => item.bury && <Grounding key={item.name} p={p} hillsY={hillsY} it={item} W={vp.W} H={vp.H} />)}
@@ -340,8 +340,8 @@ function Grounding({ p, hillsY, it, W, H }: { p: MotionValue<number>; hillsY: Mo
   const { x, ground, size } = groundPx(it, W, H);
   const [bw, bh] = it.bury ?? [0, 0];
   const rx = bw * size, ry = bh * size;
-  // centred on the ground line (the photo's own coordinates start 12vh down); a few overlapping lobes for a grassy top
-  const cy = ground - 0.12 * H;
+  // centred on the ground line; a few overlapping lobes for a grassy top
+  const cy = ground;
   const lobe = (dx: number, dy: number, sx: number, sy: number) =>
     `radial-gradient(${rx * sx}px ${ry * sy}px at ${x + dx * rx}px ${cy + dy * ry}px, black 55%, transparent 100%)`;
   const mask = [lobe(0, 0.15, 1, 1), lobe(-0.45, -0.05, 0.5, 1.05), lobe(0.4, 0, 0.55, 1.1), lobe(0.05, -0.1, 0.35, 1.15)].join(", ");
@@ -352,7 +352,7 @@ function Grounding({ p, hillsY, it, W, H }: { p: MotionValue<number>; hillsY: Mo
       aria-hidden
       className="pointer-events-none absolute inset-0 h-full w-full max-w-none object-cover object-top"
       // above the notes' layer (z-30), below the header
-      style={{ zIndex: 35, y: hillsY, top: "12vh", opacity, maskImage: mask, WebkitMaskImage: mask, maskRepeat: "no-repeat", WebkitMaskRepeat: "no-repeat" }}
+      style={{ zIndex: 35, y: hillsY, opacity, maskImage: mask, WebkitMaskImage: mask, maskRepeat: "no-repeat", WebkitMaskRepeat: "no-repeat" }}
     />
   );
 }
