@@ -172,7 +172,7 @@ function Index() {
                     src={side < 0 ? layton : imagination}
                     alt={`AZUR ${side < 0 ? "Layton" : "Imagination"}`}
                     className="absolute max-w-none"
-                    style={{ height: L.sideBottleH, left: b.x, top: L.sideSeat - L.sideBottleH * 0.985, transform: "translateX(-50%)" }}
+                    style={{ height: L.sideBottleH, left: b.x, top: L.sideSeat - L.sideBottleH * 0.955, transform: "translateX(-50%)" }}
                   />
                 </motion.div>
               );
@@ -360,8 +360,8 @@ function finaleLayout(W: number, H: number) {
   const centerTop = 0.73 * H;
   const sideTop = 0.65 * H;
   // bottles stand a little behind the middle of the elliptical top face
-  const centerSeat = centerTop + capHeight(cw) * 0.5;
-  const sideSeat = sideTop + capHeight(sw) * 0.5;
+  const centerSeat = centerTop + capHeight(cw) * 0.72;
+  const sideSeat = sideTop + capHeight(sw) * 0.72;
   const offset = cw / 2 + sw * 0.3;
   // hover never above the start (no upward hop) and never touching the rising column
   const startTop = (0.45 - CAP_RISE) * H;
@@ -372,7 +372,7 @@ function finaleLayout(W: number, H: number) {
     // cap-top positions: where the drop scene left it (45vh, full size), hovering just above the stone, landed
     startTop,
     hoverTop,
-    landTop: centerSeat - total,
+    landTop: centerSeat - total * 0.975,
     hoverScale: hoverTotal / ((BOTTLE_H + CAP_RISE) * H),
     H,
     center: { x: W / 2, w: cw },
