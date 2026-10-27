@@ -20,9 +20,10 @@ export function Contact({ withForm = true }: { withForm?: boolean }) {
               Odaberite mirise, a mi vam se javljamo na WhatsApp-u sa cijenom i terminom preuzimanja.
             </p>
           </Reveal>
-          <Reveal className="mx-auto mt-10 max-w-md rounded-3xl bg-ivory p-6 shadow-2xl md:p-8">
+          {/* Plain div, not <Reveal>: a framer-motion transformed ancestor can leave the form unpainted on iOS Safari when the keyboard resizes the viewport. */}
+          <div className="mx-auto mt-10 max-w-md rounded-3xl bg-ivory p-6 shadow-2xl md:p-8">
             <InquiryForm />
-          </Reveal>
+          </div>
         </>
       )}
       <div className={`flex flex-col items-center gap-3 text-sm text-navy-foreground/70 ${withForm ? "mt-10" : ""}`}>
