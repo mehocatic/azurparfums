@@ -233,9 +233,9 @@ function InquiryBar() {
           <span className="text-xs uppercase tracking-[0.25em] text-gold">Pošalji →</span>
         </button>
       </div>
-      <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerContent className="bg-ivory">
-          <div className="mx-auto w-full max-w-md overflow-y-auto px-6 pb-8 pt-4">
+      <Drawer open={open} onOpenChange={setOpen} handleOnly shouldScaleBackground={false} repositionInputs={false}>
+        <DrawerContent className="max-h-[92dvh] bg-ivory">
+          <div className="mx-auto min-h-0 w-full max-w-md flex-1 overflow-y-auto overscroll-contain px-6 pb-8 pt-4">
             <DrawerTitle className="text-center font-display text-3xl font-light text-navy">
               Vaš upit
             </DrawerTitle>
