@@ -7,7 +7,7 @@ import { ScrollTop } from "@/components/ScrollTop";
 import { pageHead } from "@/lib/seo";
 import { Contact } from "@/components/sections/Contact";
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
-import { HOUSES, PERFUMES, PERFUME_COUNT, searchPerfumes, type Gender } from "@/lib/azur";
+import { HOUSES, PERFUMES, PERFUME_COUNT, kuca, searchPerfumes, type Gender } from "@/lib/azur";
 import { useInquiry } from "@/lib/inquiry";
 
 export const Route = createFileRoute("/mirisi")({
@@ -77,7 +77,7 @@ function Mirisi() {
         </p>
         <h1 className="mt-3 font-display text-5xl font-light md:text-7xl">Svi AZUR mirisi</h1>
         <p className="mt-3 max-w-md text-sm leading-relaxed text-navy/60">
-          {PERFUME_COUNT} mirisa iz {HOUSES.length} kuća. Pronađite svoj miris, dodajte ga u upit
+          {PERFUME_COUNT} mirisa iz {HOUSES.length} {kuca(HOUSES.length)}. Pronađite svoj miris, dodajte ga u upit
           (+) i pošaljite na WhatsApp.
         </p>
       </div>

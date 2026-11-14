@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
-import { HOUSES, PERFUME_COUNT } from "@/lib/azur";
+import { HOUSES, PERFUME_COUNT, kuca } from "@/lib/azur";
 import { Eyebrow, Reveal } from "./Reveal";
 
 const FAMOUS = ["Xerjoff", "Parfums de Marly", "Amouage", "Creed", "Tom Ford", "Kilian", "Louis Vuitton", "Dior", "Initio", "Roja", "Maison Francis Kurkdjian", "Byredo"];
@@ -13,7 +13,7 @@ export function Houses() {
       <Reveal className="px-6 text-center">
         <Eyebrow>Kuće koje nas inspirišu</Eyebrow>
         <h2 className="mt-4 font-display text-4xl font-light md:text-6xl">
-          {PERFUME_COUNT} mirisa iz {HOUSES.length} kuća
+          {PERFUME_COUNT} mirisa iz {HOUSES.length} {kuca(HOUSES.length)}
         </h2>
       </Reveal>
 

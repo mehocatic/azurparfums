@@ -22,6 +22,9 @@ export const HOUSES: House[] = (raw as [string, [string, Gender][]][])
   .map(([brand, list]) => ({ brand, perfumes: list.map(([name, gender]) => ({ name, gender })) }))
   .sort((a, b) => b.perfumes.length - a.perfumes.length || a.brand.localeCompare(b.brand));
 
+// "142 kuće", "21 kuća", "5 kuća": genitive singular after 2–4 (but not 12–14), genitive plural otherwise
+export const kuca = (n: number) => (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "kuće" : "kuća");
+
 export const PERFUME_COUNT = HOUSES.reduce((n, h) => n + h.perfumes.length, 0);
 
 // lowercase, no diacritics, so "sauvage", "sauv" or "dzidzi" match regardless of how it was typed
