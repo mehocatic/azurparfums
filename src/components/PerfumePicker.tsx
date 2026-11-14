@@ -32,7 +32,7 @@ export function PerfumePicker() {
             <li key={`${p.name}|${p.brand ?? ""}`} className="flex items-center gap-3 py-2.5 pl-4 pr-2">
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-display text-lg leading-tight">{p.name}</span>
-                <span className="block truncate text-[10px] uppercase tracking-[0.18em] text-navy/45">{p.brand ? `Inspirisan · ${p.brand}` : "Upisano ručno"}</span>
+                <span className="block truncate text-[10px] uppercase tracking-[0.18em] text-navy/70">{p.brand ? `Inspirisan · ${p.brand}` : "Upisano ručno"}</span>
               </span>
               <button type="button" onClick={() => inquiry.remove(p)} aria-label={`Ukloni ${p.name}`} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-navy/40 transition-colors hover:bg-navy/5 hover:text-navy">
                 <X className="h-4 w-4" />
@@ -80,9 +80,9 @@ export function PerfumePicker() {
                 {o.brand ? (
                   <>
                     <span className="min-w-0 truncate">
-                      {o.name} <span className="text-navy/50">· {o.brand}</span>
+                      {o.name} <span className="text-navy/70">· {o.brand}</span>
                     </span>
-                    <span className="shrink-0 text-[10px] uppercase tracking-[0.15em] text-navy/40">{o.gender}</span>
+                    <span className="shrink-0 text-[10px] uppercase tracking-[0.15em] text-navy/65">{o.gender}</span>
                   </>
                 ) : (
                   <span className="text-navy/70">

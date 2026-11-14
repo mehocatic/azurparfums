@@ -41,10 +41,10 @@ export function InquiryForm() {
                 onClick={() => setDelivery(id)}
                 className={`relative flex flex-col items-start gap-2 rounded-2xl border p-3.5 text-left transition ${on ? "border-gold bg-gold/10 shadow-[0_0_0_3px_color-mix(in_oklab,var(--gold)_15%,transparent)]" : "border-navy/12 bg-white/60 hover:border-navy/30"}`}
               >
-                <Icon className={`h-5 w-5 ${on ? "text-gold" : "text-navy/40"}`} strokeWidth={1.5} />
+                <Icon className={`h-5 w-5 ${on ? "text-gold-ink" : "text-navy/55"}`} strokeWidth={1.5} />
                 <span>
                   <span className="block text-sm font-medium leading-tight">{title}</span>
-                  <span className="mt-0.5 block text-xs text-navy/50">{sub}</span>
+                  <span className="mt-0.5 block text-xs text-navy/70">{sub}</span>
                 </span>
                 {on && (
                   <span className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-gold text-navy">
@@ -62,17 +62,19 @@ export function InquiryForm() {
       </Step>
 
       <div className="pt-1">
-        <a
-          href={href}
-          target="_blank"
-          rel="noreferrer"
-          aria-disabled={!href}
-          className={`flex items-center justify-center gap-3 rounded-full py-4 text-xs uppercase tracking-[0.25em] transition ${href ? "bg-navy text-gold shadow-xl shadow-navy/25 hover:-translate-y-0.5" : "pointer-events-none bg-navy/10 text-navy/40"}`}
-        >
-          <MessageCircle className="h-4 w-4" strokeWidth={1.75} />
-          Pošalji upit na WhatsApp
-        </a>
-        <p className="mt-3 text-center text-xs leading-relaxed text-navy/55">
+        {/* a real link only once the inquiry is complete; an <a> without href is not crawlable */}
+        {href ? (
+          <a href={href} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-3 rounded-full bg-navy py-4 text-xs uppercase tracking-[0.25em] text-gold shadow-xl shadow-navy/25 transition hover:-translate-y-0.5">
+            <MessageCircle className="h-4 w-4" strokeWidth={1.75} />
+            Pošalji upit na WhatsApp
+          </a>
+        ) : (
+          <button type="button" disabled className="flex w-full items-center justify-center gap-3 rounded-full bg-navy/10 py-4 text-xs uppercase tracking-[0.25em] text-navy/40">
+            <MessageCircle className="h-4 w-4" strokeWidth={1.75} />
+            Pošalji upit na WhatsApp
+          </button>
+        )}
+        <p className="mt-3 text-center text-xs leading-relaxed text-navy/70">
           {href ? "Otvara se WhatsApp sa gotovom porukom. Cijenu i termin dogovaramo u poruci." : `Još nedostaje: ${missing.join(" i ")}.`}
         </p>
       </div>
@@ -86,9 +88,9 @@ function Step({ n, label, aside, children, as = "label" }: { n: number; label: s
   return (
     <Tag className="block">
       <span className="mb-2.5 flex items-baseline gap-3">
-        <span className="font-display text-xl italic leading-none text-gold">{String(n).padStart(2, "0")}</span>
+        <span className="font-display text-xl italic leading-none text-gold-ink">{String(n).padStart(2, "0")}</span>
         <span className="text-[11px] uppercase tracking-[0.25em] text-navy/70">{label}</span>
-        {aside && <span className="ml-auto text-[11px] text-navy/40">{aside}</span>}
+        {aside && <span className="ml-auto text-[11px] text-navy/70">{aside}</span>}
       </span>
       {children}
     </Tag>
